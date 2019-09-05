@@ -2,36 +2,39 @@
 // test, file-write
 //
 var fs = require('fs');
-var monk = require('monk');
-var db_setting = '192.168.10.104:27017/app1db'
 var mdl_util = require('./include/mdl_util');
+var sqlite3 = require('sqlite3').verbose()
+var dbfileName = "./app1.sqlite"
 
 /******************************** 
 *
 *********************************/
 function write_csvFile(){
-    var utl = new mdl_util( )
-    var db = monk(db_setting);
-    var collection = db.get('mdats');
+//    var utl = new mdl_util( )
     var fnm = "dat/outout.csv";
     //
     var text = "date,H,L,\n";
-    collection.find({}, {sort: { mdate: 1}} ,function(e,docs){
-        docs.forEach( function (item) {
-//console.log( item );
-            var date = utl.convert_date2str(item.mdate)
-            var hnum = item.hnum
-            var lnum = item.lnum
-            text += date +"," + hnum +"," + lnum + "\n"
+    var db = new sqlite3.Database( dbfileName )
+    var sql ="SELECT id, hnum ,lnum ,date(mdate, '+9 hours') as mdate FROM mdats order by mdate"
+    db.serialize(function() {
+        db.all(sql , function(err, rows) {
+            rows.forEach( function (item) {
+                var hnum = item.hnum
+                var lnum = item.lnum
+                var date = item.mdate
+                text += date +"," + hnum +"," + lnum + "\n"  
+            });
+            console.log( text );
+            try {
+                fs.writeFileSync(fnm , text);
+                console.log('write end');
+            }catch(e){
+                console.log(e);
+            }      
         });
-        db.close()
-        try {
-            fs.writeFileSync(fnm , text);
-            console.log('write end');
-        }catch(e){
-            console.log(e);
-        }
     });
+    db.close();
+
 }
 /******************************** 
 * main
