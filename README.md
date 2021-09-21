@@ -6,6 +6,8 @@
 
  date    : 2019/09/04
 
+ update  : 2021/09/20
+
 ***
 
 Vue.js + node/express + sqlite3  chart.js ,sample
